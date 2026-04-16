@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Project.Gameplay.Scripts.Interactables;
 using Project.Gameplay.Scripts.Items;
+using Project.Narrative.Scripts;
 
 namespace Project.Core.Runtime.Managers
 {
@@ -9,6 +11,9 @@ namespace Project.Core.Runtime.Managers
     {
         public event Action<string> OnPanelShown;
         public event Action<string> OnPanelHidden;
+
+        private Action<string> onVnChoiceSelected;
+        private readonly List<VNChoiceViewData> currentVnChoices = new();
 
         public void ShowPanel(string panelId)
         {
@@ -43,5 +48,63 @@ namespace Project.Core.Runtime.Managers
         public void ShowToolHint(string tool, string target, bool valid) => Debug.Log($"ToolHint: {tool} -> {target} ({valid})");
         public void ShowToolResult(string result, bool highlight) => Debug.Log($"ToolResult: {result}, highlight={highlight}");
         public void PlaySceneTransition(string type) => Debug.Log($"SceneTransition: {type}");
+
+        public void ShowVNPanel() => Debug.Log("ShowVNPanel");
+        public void HideVNPanel() => Debug.Log("HideVNPanel");
+        public void ShowVNLine(string speakerName, string text, float secondsPerChar) => Debug.Log($"ShowVNLine: [{speakerName}] {text} ({secondsPerChar}s/char)");
+        public void CompleteVNLine() => Debug.Log("CompleteVNLine");
+        public void ShowVNChoices(IReadOnlyList<VNChoiceViewData> choices, Action<string> onSelected)
+        {
+            currentVnChoices.Clear();
+            onVnChoiceSelected = onSelected;
+
+            var labels = new List<string>();
+            if (choices != null)
+            {
+                foreach (var choice in choices)
+                {
+                    if (choice == null)
+                    {
+                        continue;
+                    }
+
+                    currentVnChoices.Add(choice);
+                    labels.Add($"{choice.ChoiceId}:{choice.Text}");
+                }
+            }
+
+            Debug.Log($"ShowVNChoices: {string.Join(" | ", labels)}");
+        }
+
+        public void SelectVNChoice(string choiceId)
+        {
+            if (string.IsNullOrWhiteSpace(choiceId) || onVnChoiceSelected == null)
+            {
+                return;
+            }
+
+            foreach (var choice in currentVnChoices)
+            {
+                if (choice != null && choice.ChoiceId == choiceId)
+                {
+                    var callback = onVnChoiceSelected;
+                    currentVnChoices.Clear();
+                    onVnChoiceSelected = null;
+                    callback.Invoke(choiceId);
+                    return;
+                }
+            }
+
+            Debug.LogWarning($"Unknown VN choice selected: {choiceId}");
+        }
+
+        public void HideVNChoices()
+        {
+            currentVnChoices.Clear();
+            onVnChoiceSelected = null;
+            Debug.Log("HideVNChoices");
+        }
+        public void ShowVNPortrait(string portraitId, VNPortraitPosition position) => Debug.Log($"ShowVNPortrait: {portraitId} @ {position}");
+        public void ClearVNPortraits() => Debug.Log("ClearVNPortraits");
     }
 }

@@ -11,6 +11,7 @@ namespace Project.Core.Runtime.Framework
         Inspection = 4,
         Pause = 5,
         GameOver = 6,
-        Victory = 7
+        Victory = 7,
+        VisualNovel = 8
     }
 }
