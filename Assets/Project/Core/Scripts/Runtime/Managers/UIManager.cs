@@ -12,6 +12,9 @@ namespace Project.Core.Runtime.Managers
         public event Action<string> OnPanelShown;
         public event Action<string> OnPanelHidden;
 
+        private Action<string> onVnChoiceSelected;
+        private readonly List<VNChoiceViewData> currentVnChoices = new();
+
         public void ShowPanel(string panelId)
         {
             OnPanelShown?.Invoke(panelId);
@@ -52,11 +55,20 @@ namespace Project.Core.Runtime.Managers
         public void CompleteVNLine() => Debug.Log("CompleteVNLine");
         public void ShowVNChoices(IReadOnlyList<VNChoiceViewData> choices, Action<string> onSelected)
         {
+            currentVnChoices.Clear();
+            onVnChoiceSelected = onSelected;
+
             var labels = new List<string>();
             if (choices != null)
             {
                 foreach (var choice in choices)
                 {
+                    if (choice == null)
+                    {
+                        continue;
+                    }
+
+                    currentVnChoices.Add(choice);
                     labels.Add($"{choice.ChoiceId}:{choice.Text}");
                 }
             }
@@ -64,7 +76,31 @@ namespace Project.Core.Runtime.Managers
             Debug.Log($"ShowVNChoices: {string.Join(" | ", labels)}");
         }
 
-        public void HideVNChoices() => Debug.Log("HideVNChoices");
+        public void SelectVNChoice(string choiceId)
+        {
+            if (string.IsNullOrWhiteSpace(choiceId) || onVnChoiceSelected == null)
+            {
+                return;
+            }
+
+            foreach (var choice in currentVnChoices)
+            {
+                if (choice != null && choice.ChoiceId == choiceId)
+                {
+                    onVnChoiceSelected.Invoke(choiceId);
+                    return;
+                }
+            }
+
+            Debug.LogWarning($"Unknown VN choice selected: {choiceId}");
+        }
+
+        public void HideVNChoices()
+        {
+            currentVnChoices.Clear();
+            onVnChoiceSelected = null;
+            Debug.Log("HideVNChoices");
+        }
         public void ShowVNPortrait(string portraitId, VNPortraitPosition position) => Debug.Log($"ShowVNPortrait: {portraitId} @ {position}");
         public void ClearVNPortraits() => Debug.Log("ClearVNPortraits");
     }

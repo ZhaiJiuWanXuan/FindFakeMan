@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Project.Core.Runtime.Framework;
 
 namespace Project.Narrative.Scripts
 {
@@ -84,7 +85,7 @@ namespace Project.Narrative.Scripts
         public VNEndActionType actionType = VNEndActionType.ReturnToPreviousState;
         public string targetSceneName;
         public string targetChapterId;
-        public int targetGameState;
+        public GameState targetGameState = GameState.Exploration;
     }
 
     [CreateAssetMenu(menuName = "Project/Narrative/VN Chapter Config")]

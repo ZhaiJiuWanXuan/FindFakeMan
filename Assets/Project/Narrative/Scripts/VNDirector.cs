@@ -57,8 +57,20 @@ namespace Project.Narrative.Scripts
 
         public async UniTask PlaySequence(string sequenceId)
         {
+            await PlaySequence(sequenceId, new HashSet<string>());
+        }
+
+        private async UniTask PlaySequence(string sequenceId, HashSet<string> visitedSequenceIds)
+        {
             if (currentChapter == null)
             {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(sequenceId) || !visitedSequenceIds.Add(sequenceId))
+            {
+                Debug.LogWarning($"VN sequence loop or invalid sequence detected: {sequenceId}");
+                EndChapter();
                 return;
             }
 
@@ -73,7 +85,7 @@ namespace Project.Narrative.Scripts
             {
                 if (!string.IsNullOrWhiteSpace(currentSequence.nextSequenceId))
                 {
-                    await PlaySequence(currentSequence.nextSequenceId);
+                    await PlaySequence(currentSequence.nextSequenceId, visitedSequenceIds);
                 }
                 else
                 {
@@ -87,8 +99,27 @@ namespace Project.Narrative.Scripts
 
         public async UniTask PlayNode(string nodeId)
         {
+            await PlayNode(nodeId, new HashSet<string>());
+        }
+
+        private async UniTask PlayNode(string nodeId, HashSet<string> visitedNodeIdsInChain)
+        {
             if (currentSequence == null)
             {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nodeId) || !visitedNodeIdsInChain.Add(nodeId))
+            {
+                Debug.LogWarning($"VN node loop or invalid node detected: {nodeId}");
+                if (!string.IsNullOrWhiteSpace(currentSequence.nextSequenceId))
+                {
+                    await PlaySequence(currentSequence.nextSequenceId);
+                }
+                else
+                {
+                    EndChapter();
+                }
                 return;
             }
 
@@ -111,7 +142,7 @@ namespace Project.Narrative.Scripts
                 var fallbackNodeId = !string.IsNullOrWhiteSpace(currentNode.elseNodeId)
                     ? currentNode.elseNodeId
                     : GetNextNodeId(currentNode);
-                await PlayNode(fallbackNodeId);
+                await PlayNode(fallbackNodeId, visitedNodeIdsInChain);
                 return;
             }
 
@@ -295,10 +326,16 @@ namespace Project.Narrative.Scripts
 
             switch (endAction.actionType)
             {
+                case VNEndActionType.ReturnToPreviousState:
+                    if (Services.TryGet<GameManager>(out var revertGameManager))
+                    {
+                        revertGameManager.RevertState();
+                    }
+                    break;
                 case VNEndActionType.SwitchGameState:
                     if (Services.TryGet<GameManager>(out var gameManager))
                     {
-                        gameManager.SwitchState((GameState)endAction.targetGameState);
+                        gameManager.SwitchState(endAction.targetGameState);
                     }
                     break;
                 case VNEndActionType.LoadScene:

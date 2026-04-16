@@ -9,9 +9,9 @@ namespace Project.Core.Runtime.Framework
         Title = 2,
         Exploration = 3,
         Inspection = 4,
-        VisualNovel = 5,
-        Pause = 6,
-        GameOver = 7,
-        Victory = 8
+        Pause = 5,
+        GameOver = 6,
+        Victory = 7,
+        VisualNovel = 8
     }
 }

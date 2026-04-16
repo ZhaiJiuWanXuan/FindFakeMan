@@ -107,8 +107,24 @@ namespace Project.Core.Runtime.Managers
             if (Services.TryGet<FlagManager>(out var flagManager)) flagManager.LoadState(data.flags);
             if (Services.TryGet<BranchManager>(out var branchManager)) branchManager.LoadState(data.branch);
             if (Services.TryGet<EvidenceManager>(out var evidenceManager)) evidenceManager.LoadState(data.evidence);
-            if (Services.TryGet<VNDirector>(out var vnDirector)) vnDirector.LoadState(data.visualNovel);
-            if (Services.TryGet<GameManager>(out var gameManager) && data.currentState != GameState.VisualNovel)
+
+            var isVisualNovelState = data.currentState == GameState.VisualNovel;
+            if (isVisualNovelState)
+            {
+                if (Services.TryGet<VNDirector>(out var vnDirector))
+                {
+                    vnDirector.LoadState(data.visualNovel);
+                }
+                else if (Services.TryGet<GameManager>(out var vnFallbackGameManager))
+                {
+                    Debug.LogWarning("Saved state was VisualNovel, but VNDirector is not available. Falling back to Exploration.");
+                    vnFallbackGameManager.SwitchState(GameState.Exploration);
+                }
+
+                return;
+            }
+
+            if (Services.TryGet<GameManager>(out var gameManager))
             {
                 gameManager.SwitchState(data.currentState);
             }
