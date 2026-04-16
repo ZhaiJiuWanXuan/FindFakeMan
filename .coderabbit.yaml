@@ -1,0 +1,211 @@
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbit summary"
+  review_status: true
+  collapse_walkthrough: false
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_filters:
+    - "Assets/**"
+    - "Packages/**"
+    - "ProjectSettings/**"
+    - "!Library/**"
+    - "!Logs/**"
+    - "!Temp/**"
+    - "!obj/**"
+
+  path_instructions:
+    - path: "Assets/**/*.asset"
+      instructions: |
+        This is a Unity asset file. Review for broken YAML references, invalid GUID/fileID pairs,
+        invalid m_Script pointers, accidental hand-edited asset corruption, and data integrity issues.
+        Be especially alert to placeholder GUIDs, broken text PPtrs, and ScriptableObject asset references
+        that do not match the script's .meta GUID.
+
+    - path: "Assets/**/*.meta"
+      instructions: |
+        Review .meta changes carefully. Flag accidental GUID churn, deleted meta files, duplicated GUID risks,
+        or unrelated asset identity changes. .meta integrity is high priority in this repository.
+
+    - path: "ProjectSettings/**"
+      instructions: |
+        Treat ProjectSettings changes as high-risk and verify they are intentional and directly related to the task.
+        Flag unrelated build, input, package, rendering, or editor setting changes.
+
+    - path: "Assets/Project/Core/Scripts/Runtime/Framework/**/*.cs"
+      instructions: |
+        This folder contains shared runtime framework code. These files are exempt from the repository namespace requirement.
+        Review for:
+        - save/load symmetry
+        - GameState correctness
+        - serialization compatibility
+        - breaking changes to shared enums or save data
+        - unintended impact on manager coordination
+
+    - path: "Assets/Project/Core/Scripts/Runtime/Managers/**/*.cs"
+      instructions: |
+        This folder contains central runtime managers registered through the Services registry.
+        These files are exempt from the repository namespace requirement.
+        Review for:
+        - incorrect manager lifecycle assumptions
+        - missing TryGet/Get safety
+        - state transition bugs
+        - pause/resume mismatches
+        - new persistent state not integrated with SaveManager
+        - duplicated responsibility between managers
+
+    - path: "Assets/Project/Narrative/**/*.cs"
+      instructions: |
+        This folder contains the visual novel framework.
+        These files are exempt from the repository namespace requirement.
+        Review for:
+        - incorrect narrative node execution order
+        - condition checks happening after side effects
+        - flag writes happening in the wrong order
+        - invalid or dead-end node/sequence jumps
+        - duplicate IDs
+        - save/load restoration bugs
+        - stuck states involving auto-continue, choice waiting, or external signal waiting
+        - runtime mutation of ScriptableObject authoring data
+
+    - path: "Assets/Project/Narrative/**/*.asset"
+      instructions: |
+        These are narrative data assets. Review for:
+        - broken m_Script references
+        - duplicate chapter/sequence/node/choice IDs
+        - invalid targetSequenceId / targetNodeId references
+        - missing required fields that would cause runtime-only failures
+        - asset data that appears to encode runtime state instead of authoring/configuration state
+
+    - path: "Assets/Project/Gameplay/**/*.cs"
+      instructions: |
+        Review gameplay code for consistency with manager-driven architecture.
+        Gameplay scripts should use an explicit namespace.
+        Flag any new or modified script without a namespace declaration.
+        Exemptions: manager scripts, base/shared framework scripts, and the visual novel system.
+        Also flag direct runtime mutation of ScriptableObject config assets, missing save/load implications,
+        and interaction logic that bypasses GameManager/UIManager/InteractionManager patterns.
+
+    - path: "Assets/**/*.cs"
+      instructions: |
+        Repository convention: except for manager scripts, shared base/framework scripts,
+        and the visual novel system, all C# scripts should use an explicit namespace.
+        Flag new or modified scripts that omit a namespace unless they clearly belong to an exempt category.
+
+chat:
+  auto_reply: false
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/*.cs"
+      - "**/*.asset"
+      - "**/*.meta"
+      - "ProjectSettings/**"
+
+  learnings:
+    scope: auto
+
+  issues:
+    scope: auto
+
+language: en-US
+
+tone_instructions: |
+  Be concise, technical, and practical. Prioritize correctness over style.
+  Focus on Unity-specific integrity, state consistency, save/load correctness,
+  and data-driven narrative safety. Avoid generic style nitpicks.
+
+review_instructions: |
+  This repository is a Unity project with manager-driven runtime architecture,
+  ScriptableObject-based data, centralized save/load, and an in-progress visual novel framework.
+
+  Repository convention:
+  - Except for manager scripts, shared base/framework scripts, and the visual novel system,
+    all other scripts should use an explicit namespace.
+  - Flag new or modified scripts that omit a namespace when they do not belong to one of those exempt categories.
+
+  Prioritize the following review concerns:
+
+  1. Unity asset/reference integrity
+  - Flag invalid GUIDs, broken fileID/guid pairs, broken m_Script references, deleted .meta files,
+    placeholder GUIDs, and hand-written YAML that may be invalid.
+  - Treat broken asset references as high severity.
+
+  2. ScriptableObject safety
+  - Flag runtime mutation of ScriptableObject assets used as config or authored content.
+  - Prefer runtime state to live in managers, save data, or dedicated runtime models.
+
+  3. Save/load symmetry
+  - When new persistent gameplay or narrative state is added, check that save and load paths are both updated.
+  - Flag asymmetric GetSaveData/LoadState changes.
+  - Flag narrative position, flags, or manager state that is saved but not restored, or restored in unsafe order.
+
+  4. Game state correctness
+  - Review GameManager state transitions carefully.
+  - Flag transitions that can trap the game in the wrong mode, especially around Exploration, Inspection,
+    Pause, and VisualNovel.
+  - Flag misuse of RevertState() where previous state may no longer be valid.
+
+  5. Services registry and manager lifecycle
+  - This project uses Services registration via ManagerBehaviour.
+  - Flag code that assumes a manager exists when startup order does not guarantee it.
+  - Prefer TryGet where service presence depends on scene/setup timing.
+  - Flag duplicate manager instance risks or conflicting ownership of shared behavior.
+
+  6. VN runtime sequencing
+  - In the visual novel framework, review execution order carefully:
+    conditions -> flag updates -> presentation/effects -> waiting state -> jump/advance.
+  - Flag node execution that applies conditions after side effects.
+  - Flag choices or jumps that can lead to null targets, dead ends, or unreachable flows.
+  - Flag duplicate IDs for chapters, sequences, nodes, or choices.
+  - Flag waiting states that can get stuck (choice wait, external signal wait, auto-continue logic).
+
+  7. Data-driven content validation
+  - String IDs are important in this repo. Flag invalid jump targets, duplicate IDs,
+    and content references that are silently ignored.
+  - Prefer meaningful warnings over silent failure when authored data is invalid.
+
+  8. UI/presentation separation
+  - UIManager should remain presentation-focused.
+  - Flag business logic or progression control leaking into UI code.
+  - Flag button/callback logic that may double-advance or cause duplicated state transitions.
+
+  9. Interaction pause/resume correctness
+  - Flag entering modal systems (especially VN mode) without pausing interactions.
+  - Flag exits that do not resume interactions.
+  - Flag unconditional resume calls that may break stacked modal flows.
+
+  10. Audio/CG/effect safety
+  - Review repeated node presentation for duplicated BGM/SFX/CG side effects.
+  - Flag side effects that may replay incorrectly after load or repeated presentation.
+
+  11. Namespace convention
+  - Except for manager scripts, shared base/framework scripts, and the visual novel system,
+    all other scripts should use an explicit namespace.
+  - Flag missing namespace declarations in new or modified non-exempt scripts.
+
+  12. Avoid over-engineering
+  - Do not suggest speculative abstractions unless current code clearly needs them.
+  - Prefer concrete, minimal changes aligned with the current Unity project structure.
+
+  13. Avoid low-value nitpicks
+  - Do not focus on formatting-only issues.
+  - Do not push generic architecture rewrites.
+  - Do not suggest replacing all string IDs with heavy systems unless there is a concrete bug.
+
+  When reviewing PRs, prioritize comments on:
+  - broken Unity references
+  - save/load bugs
+  - invalid narrative targets or duplicate IDs
+  - incorrect state transitions
+  - ScriptableObject runtime mutation
+  - modal interaction lock/resume bugs
+  - missing namespaces in non-exempt scripts
+  - silent failures that skip content or corrupt progression

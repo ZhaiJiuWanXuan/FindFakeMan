@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Project.Core.Runtime.Framework;
+using Project.Narrative.Scripts;
 
 namespace Project.Core.Runtime.Managers
 {
@@ -94,6 +95,7 @@ namespace Project.Core.Runtime.Managers
             if (Services.TryGet<FlagManager>(out var flagManager)) data.flags = flagManager.GetSaveData();
             if (Services.TryGet<BranchManager>(out var branchManager)) data.branch = branchManager.GetSaveData();
             if (Services.TryGet<EvidenceManager>(out var evidenceManager)) data.evidence = evidenceManager.GetSaveData();
+            if (Services.TryGet<VNDirector>(out var vnDirector)) data.visualNovel = vnDirector.GetSaveData();
             return data;
         }
 
@@ -105,7 +107,11 @@ namespace Project.Core.Runtime.Managers
             if (Services.TryGet<FlagManager>(out var flagManager)) flagManager.LoadState(data.flags);
             if (Services.TryGet<BranchManager>(out var branchManager)) branchManager.LoadState(data.branch);
             if (Services.TryGet<EvidenceManager>(out var evidenceManager)) evidenceManager.LoadState(data.evidence);
-            if (Services.TryGet<GameManager>(out var gameManager)) gameManager.SwitchState(data.currentState);
+            if (Services.TryGet<VNDirector>(out var vnDirector)) vnDirector.LoadState(data.visualNovel);
+            if (Services.TryGet<GameManager>(out var gameManager) && data.currentState != GameState.VisualNovel)
+            {
+                gameManager.SwitchState(data.currentState);
+            }
         }
 
         private string GetSlotPath(string slotId) => Path.Combine(SaveDirectory, $"{slotId}.json");

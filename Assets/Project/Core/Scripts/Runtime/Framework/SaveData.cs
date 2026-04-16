@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Project.Narrative.Scripts;
 
 namespace Project.Core.Runtime.Framework
 {
@@ -61,6 +62,7 @@ namespace Project.Core.Runtime.Framework
         public FlagSaveData flags = new();
         public BranchSaveData branch = new();
         public EvidenceSaveData evidence = new();
+        public VNSaveData visualNovel = new();
     }
 
     [Serializable]
