@@ -36,7 +36,6 @@ namespace Project.Samples.Stage2Breach.Scripts
         [SerializeField] private Text inspectorBodyText;
 
         private readonly List<string> currentChoiceIds = new();
-        private IToolInputService toolInput;
         private Color defaultResultColor;
         private bool hasResultColor;
         private Color defaultToolDragColor;
@@ -45,7 +44,6 @@ namespace Project.Samples.Stage2Breach.Scripts
         private void Awake()
         {
             Services.Register<ISceneUiView>(this);
-            Services.TryGet<IToolInputService>(out toolInput);
             BindChoiceButtons();
             BindToolButtons();
             HideChoices();
@@ -365,7 +363,7 @@ namespace Project.Samples.Stage2Breach.Scripts
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() =>
                 {
-                    EnsureToolInput();
+                    var toolInput = GetToolInput();
                     toolInput?.SelectSlot(slotIndex);
                 });
             }
@@ -385,12 +383,9 @@ namespace Project.Samples.Stage2Breach.Scripts
             }
         }
 
-        private void EnsureToolInput()
+        private IToolInputService GetToolInput()
         {
-            if (toolInput == null)
-            {
-                Services.TryGet<IToolInputService>(out toolInput);
-            }
+            return Services.TryGet<IToolInputService>(out var service) ? service : null;
         }
 
         private void UpdateContinueHint()

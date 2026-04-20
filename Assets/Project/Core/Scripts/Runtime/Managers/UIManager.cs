@@ -16,10 +16,8 @@ namespace Project.Core.Runtime.Managers
         private Action<string> onVnChoiceSelected;
         private readonly List<VNChoiceViewData> currentVnChoices = new();
 
-        private ISceneUiView sceneUi;
-        private IToolInputService toolInput;
-        private ISceneUiView SceneUi => sceneUi != null ? sceneUi : (Services.TryGet<ISceneUiView>(out var service) ? sceneUi = service : null);
-        private IToolInputService ToolInput => toolInput != null ? toolInput : (Services.TryGet<IToolInputService>(out var service) ? toolInput = service : null);
+        private ISceneUiView SceneUi => Services.TryGet<ISceneUiView>(out var service) ? service : null;
+        private IToolInputService ToolInput => Services.TryGet<IToolInputService>(out var service) ? service : null;
         public void ShowPanel(string panelId)
         {
             OnPanelShown?.Invoke(panelId);
