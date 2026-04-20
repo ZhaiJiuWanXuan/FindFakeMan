@@ -29,16 +29,15 @@ namespace Project.Gameplay.Scripts.Interactables
                 return;
             }
 
-            if (Services.TryGet<InteractionManager>(out var interactionManager))
+            
+
+            var toolInput = FindFirstObjectByType<Stage2BreachToolInput>();
+            var handledByTool = toolInput != null && !toolInput.IsDragging && toolInput.TryUseOn(interactable);
+            if (!handledByTool && Services.TryGet<InteractionManager>(out var interactionManager))
             {
                 interactionManager.OnInteractableClicked(interactable);
             }
-
-            var toolInput = FindFirstObjectByType<Stage2BreachToolInput>();
-            if (toolInput != null && !toolInput.IsDragging)
-            {
-                toolInput.TryUseOn(interactable);
-            }
+                
         }
     }
 }

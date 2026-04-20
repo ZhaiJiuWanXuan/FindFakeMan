@@ -17,9 +17,10 @@ namespace Project.Core.Runtime.Managers
         private Action<string> onVnChoiceSelected;
         private readonly List<VNChoiceViewData> currentVnChoices = new();
 
-        private Stage2BreachSceneUiView SceneUi => UnityEngine.Object.FindFirstObjectByType<Stage2BreachSceneUiView>();
-        private Stage2BreachToolInput ToolInput => UnityEngine.Object.FindFirstObjectByType<Stage2BreachToolInput>();
-
+        private Stage2BreachSceneUiView sceneUi;
+        private Stage2BreachToolInput toolInput;
+        private Stage2BreachSceneUiView SceneUi =>sceneUi != null ? sceneUi : (sceneUi = UnityEngine.Object.FindFirstObjectByType<Stage2BreachSceneUiView>());
+        private Stage2BreachToolInput ToolInput =>toolInput != null ? toolInput : (toolInput = UnityEngine.Object.FindFirstObjectByType<Stage2BreachToolInput>());
         public void ShowPanel(string panelId)
         {
             OnPanelShown?.Invoke(panelId);

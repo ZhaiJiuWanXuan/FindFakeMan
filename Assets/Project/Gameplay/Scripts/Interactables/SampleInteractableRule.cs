@@ -69,7 +69,11 @@ namespace Project.Gameplay.Scripts.Interactables
             }
 
             RegisterObservations();
-            ApplyCollection();
+            if (!ApplyCollection())
+            {
+                Fail();
+                return false;
+            }
             ApplyEvidence();
             ApplyFlags();
             ShowSuccess();
@@ -115,20 +119,19 @@ namespace Project.Gameplay.Scripts.Interactables
             }
         }
 
-        private void ApplyCollection()
+        private bool ApplyCollection()
         {
             if (clueItem == null || !Services.TryGet<InventoryManager>(out var inventoryManager))
             {
-                return;
+                return true;
             }
 
             if (collectToContainment)
             {
-                inventoryManager.AddToContainment(clueItem);
-                return;
+                return inventoryManager.AddToContainment(clueItem);
             }
 
-            inventoryManager.AddToInventory(clueItem);
+            return inventoryManager.AddToInventory(clueItem);
         }
 
         private void ApplyEvidence()
